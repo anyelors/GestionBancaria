@@ -1,6 +1,7 @@
 package modelo;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 public class Cuenta {
 
@@ -77,6 +78,17 @@ public class Cuenta {
 
     public void setFecha(LocalDate fecha) {
         this.fecha = fecha;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Cuenta cuenta)) return false;
+        return Objects.equals(iban, cuenta.iban);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(iban);
     }
 
     @Override

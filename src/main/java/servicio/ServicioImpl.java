@@ -61,6 +61,23 @@ public class ServicioImpl implements Servicio {
     @Override
     public void transferencia(Cuenta origen, Cuenta destino, float saldo) throws SQLException {
 
+        try (Connection conn = Database.getConnection()) {
+            CrudDAO<Cuenta> dao = new CuentasDAO(conn);
+            if (origen.getSaldo() < saldo)
+                return;
+
+            try {
+                conn.setAutoCommit(false);
+                origen.setSaldo(origen.getSaldo() - saldo);
+                dao.actualizar(origen);
+                destino.setSaldo(destino.getSaldo() + saldo);
+                dao.actualizar(destino);
+                conn.commit();
+            } catch ( SQLException ex ) {
+                conn.rollback();
+                throw ex;
+            }
+        }
     }
 
     @Override
@@ -73,6 +90,11 @@ public class ServicioImpl implements Servicio {
 
     @Override
     public Map<String, Double> saldoMedioCliente() throws SQLException {
-        return Map.of();
+        Map<String, Double> saldoMedio = null;
+        try (Connection conn = Database.getConnection()) {
+            CuentasDAO dao = new CuentasDAO(conn);
+            saldoMedio = dao.saldoMedioPorCliente();
+        }
+        return saldoMedio;
     }
 }

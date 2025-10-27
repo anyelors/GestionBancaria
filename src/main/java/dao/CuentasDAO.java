@@ -4,8 +4,7 @@ import modelo.Cliente;
 import modelo.Cuenta;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class CuentasDAO implements CrudDAO<Cuenta> {
 
@@ -126,6 +125,43 @@ public class CuentasDAO implements CrudDAO<Cuenta> {
 
             pst.executeUpdate();
         }
+    }
+
+    public Map<String, Double> saldoMedioPorCliente() {
+        Map<String, Double> saldoMedio = null;
+        String sql = """
+                SELECT
+                    cl.nombre AS nombre_cliente,
+                    AVG(c.saldo) AS saldo_medio
+                FROM clientes cl
+                JOIN cuentas c ON cl.id = c.id_cliente
+                GROUP BY cl.nombre
+                UNION ALL
+                SELECT
+                    'TOTAL' AS nombre_cliente,
+                    SUM(saldo_medio) AS saldo_medio
+                FROM (
+                    SELECT AVG(c.saldo) AS saldo_medio
+                    FROM clientes cl
+                    JOIN cuentas c ON cl.id = c.id_cliente
+                    GROUP BY cl.nombre
+                ) AS sub
+                ORDER BY CASE WHEN nombre_cliente = 'TOTAL' THEN 1 ELSE 0 END, nombre_cliente;
+                """;
+
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+            ResultSet rs = pst.executeQuery();
+            saldoMedio = new LinkedHashMap<>();
+
+            while (rs.next()) {
+                String nombreCliente = rs.getString("nombre_cliente");
+                Double saldoPromedio = rs.getDouble("saldo_medio");
+                saldoMedio.put(nombreCliente, saldoPromedio);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return saldoMedio;
     }
 
 }

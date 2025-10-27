@@ -1,5 +1,7 @@
 package modelo;
 
+import java.util.Objects;
+
 public class Cliente {
 
     private Long id;
@@ -42,6 +44,17 @@ public class Cliente {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Cliente cliente)) return false;
+        return Objects.equals(dni, cliente.dni);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(dni);
     }
 
     @Override

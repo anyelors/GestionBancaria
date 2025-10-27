@@ -6,6 +6,7 @@ import servicio.ServicioImpl;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 public class App {
 
@@ -15,6 +16,7 @@ public class App {
             String dni = ConsoleHelper.pedirCadena("DNI del cliente:");
             String nombre = ConsoleHelper.pedirCadena("Nombre del cliente:");
             servicio.altaCliente(new Cliente(dni, nombre));
+            System.out.println("Cliente dado de alta");
         } catch (SQLException e) {
             System.out.println("Error creando cliente: " + e.getMessage());
         }
@@ -37,6 +39,7 @@ public class App {
             } while (cliente == null);
             String iban = ConsoleHelper.pedirCadena("IBAN de nueva cuenta");
             servicio.altaCuenta(new Cuenta(iban, cliente));
+            System.out.println("Cuenta registrada.");
         } catch (SQLException e) {
             System.out.println("Error creando cuenta: " + e.getMessage());
         }
@@ -100,7 +103,60 @@ public class App {
         }
     }
 
-    public static void main(String[] args) {
+    public static void transferencias() {
+        try {
+            Servicio servicio = new ServicioImpl();
+            List<Cuenta> cuentas = servicio.listarCuentas();
+            Cuenta cuentaOrigen = null;
+            Cuenta cuentaDestino = null;
+
+            System.out.println("Listado de cuentas:");
+            cuentas.forEach(System.out::println);
+
+            do {
+                String vIbanOrigen = ConsoleHelper.pedirCadena("IBAN cuenta de origen: ");
+                cuentaOrigen = cuentas.stream()
+                        .filter(c -> c.getIban().equals(vIbanOrigen))
+                        .findFirst()
+                        .orElse(null);
+                if (cuentaOrigen == null) System.out.println("IBAN no existe. Vuelve a intentarlo.");
+            } while (cuentaOrigen == null);
+
+            do {
+                String vIbanDestino = ConsoleHelper.pedirCadena("IBAN cuenta de destino: ");
+                cuentaDestino = cuentas.stream()
+                        .filter(c -> c.getIban().equals(vIbanDestino))
+                        .findFirst()
+                        .orElse(null);
+                if (cuentaDestino == null) System.out.println("IBAN no existe. Vuelve a intentarlo.");
+            } while (cuentaDestino == null || cuentaOrigen.getIban() == cuentaDestino.getIban());
+
+            double saldo = ConsoleHelper.pedirDecimal("Indica cantidad transferencia: ");
+
+            servicio.transferencia(cuentaOrigen, cuentaDestino, (float) saldo);
+            System.out.println("Transferencia completada: ");
+            System.out.println("Cuenta Origen: ");
+            System.out.println(cuentaOrigen);
+            System.out.println("Cuenta Destino: ");
+            System.out.println(cuentaDestino);
+
+        } catch (SQLException e) {
+            System.out.println("Error creando cuenta: " + e.getMessage());
+        }
+    }
+
+    public static void saldosByCliente() {
+        try {
+            Servicio servicio = new ServicioImpl();
+            Map<String, Double> saldoMedio = servicio.saldoMedioCliente();
+            System.out.println("SALDO MEDIO POR CLIENTES:");
+            saldoMedio.forEach((k, v) -> System.out.printf("    %-20s - %.2f€%n", k, v));
+        } catch (SQLException e) {
+            System.out.println("Error obteniendo saldos medios por cliente: " + e.getMessage());
+        }
+    }
+
+    public static void menu() {
         do {
             System.out.println("\n=== GESTIÓN DE CUENTAS ===");
             System.out.println("1. ALTA CLIENTE");
@@ -115,32 +171,53 @@ public class App {
             switch (op) {
                 case 1: {
                     altaCliente();
+                    menu();
                 }
                 ;
                 break;
                 case 2: {
                     altaCuenta();
+                    menu();
                 }
                 ;
                 break;
                 case 3: {
                     listarCuentas();
+                    menu();
                 }
                 ;
                 break;
                 case 4: {
                     listarClientes();
+                    menu();
                 }
                 ;
                 break;
                 case 5: {
                     operacionCuentas();
+                    menu();
+                }
+                ;
+                break;
+                case 6: {
+                    transferencias();
+                    menu();
+                }
+                ;
+                break;
+                case 7: {
+                    saldosByCliente();
+                    menu();
                 }
                 ;
                 case 0:
-                    System.out.println("Fin de programa");
+                    System.out.println("FIN GESTIÓN DE CUENTAS");
                     System.exit(0);
             }
         } while (true);
+    }
+
+    public static void main(String[] args) {
+        menu();
     }
 }
