@@ -10,6 +10,7 @@ import java.util.List;
 public class CuentasDAO implements CrudDAO<Cuenta> {
 
     private Connection con;
+
     public CuentasDAO(Connection connection) {
         con = connection;
     }
@@ -59,10 +60,11 @@ public class CuentasDAO implements CrudDAO<Cuenta> {
                 "c.id_cliente, " +
                 "c.fecha " +
                 "FROM cuentas c " +
-                "WHERE c.id = " + id;
-        try (Statement st = con.createStatement()) {
-
-            ResultSet rs = st.executeQuery(sql);
+                "WHERE c.id = ?";
+        
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setLong(1, id);
+            ResultSet rs = pst.executeQuery();
 
             if (rs.next()) {
                 cuenta = new Cuenta();

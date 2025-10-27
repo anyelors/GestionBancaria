@@ -6,9 +6,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClienteDAO implements CrudDAO<Cliente>{
+public class ClienteDAO implements CrudDAO<Cliente> {
 
     private Connection con;
+
     public ClienteDAO(Connection connection) {
         con = connection;
     }
@@ -55,10 +56,10 @@ public class ClienteDAO implements CrudDAO<Cliente>{
                 "c.dni, " +
                 "c.nombre " +
                 "FROM clientes c " +
-                "WHERE c.id = " + id;
-        try (var st = con.createStatement()) {
-
-            var rs = st.executeQuery(sql);
+                "WHERE c.id = ?";
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setLong(1, id);
+            ResultSet rs = pst.executeQuery();
 
             if (rs.next()) {
                 String dni = rs.getString("dni");
