@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ServicioImpl implements Servicio {
     @Override
@@ -63,17 +64,14 @@ public class ServicioImpl implements Servicio {
 
         try (Connection conn = Database.getConnection()) {
             CrudDAO<Cuenta> dao = new CuentasDAO(conn);
-            if (origen.getSaldo() < saldo)
-                return;
-
             try {
                 conn.setAutoCommit(false);
-                origen.setSaldo(origen.getSaldo() - saldo);
+                origen.retirar(saldo);
                 dao.actualizar(origen);
-                destino.setSaldo(destino.getSaldo() + saldo);
+                destino.ingresar(saldo);
                 dao.actualizar(destino);
                 conn.commit();
-            } catch ( SQLException ex ) {
+            } catch (SQLException ex) {
                 conn.rollback();
                 throw ex;
             }
@@ -93,7 +91,11 @@ public class ServicioImpl implements Servicio {
         Map<String, Double> saldoMedio = null;
         try (Connection conn = Database.getConnection()) {
             CuentasDAO dao = new CuentasDAO(conn);
-            saldoMedio = dao.saldoMedioPorCliente();
+            //saldoMedio = dao.saldoMedioPorCliente();
+            List<Cuenta> cuentas = dao.listar();
+            saldoMedio = cuentas.stream()
+                    .collect(Collectors.groupingBy(c -> c.getCliente().getNombre(),
+                            Collectors.averagingDouble(c -> c.getSaldo())));
         }
         return saldoMedio;
     }

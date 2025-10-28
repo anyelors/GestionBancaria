@@ -80,6 +80,14 @@ public class Cuenta {
         this.fecha = fecha;
     }
 
+    public void ingresar(float cantidad) {
+        this.saldo += cantidad;
+    }
+
+    public void retirar(float cantidad) {
+        this.saldo -= cantidad;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Cuenta cuenta)) return false;
